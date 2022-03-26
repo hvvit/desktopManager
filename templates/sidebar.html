@@ -1,0 +1,32 @@
+<!-- Sidebar -->
+<nav id="sidebarMenu" class="collapse d-lg-block sidebar collapse bg-white">
+    <div class="position-sticky">
+      <div class="list-group list-group-flush mx-3 mt-4">
+        <a
+          href="{{ url_for('contents.dashboard') }}"
+          class="list-group-item list-group-item-action py-2 ripple"
+          id="nav-item-dashboard"
+          aria-current="true"
+        >
+          <i class="fas fa-tachometer-alt fa-fw me-3"></i><span>Dashboard</span>
+        </a>
+        <a
+        href="{{ url_for('contents.agents') }}"
+        class="list-group-item list-group-item-action py-2 ripple"
+        id="nav-item-agents"
+        aria-current="true"
+        >
+        <i class="fas fa-clone me-3"></i><span>Agents</span>
+        </a>
+        <a
+        href="{{ url_for('contents.vncs') }}"
+        class="list-group-item list-group-item-action py-2 ripple"
+        id="nav-item-vnc"
+        aria-current="true"
+        >
+        <i class="fas fa-desktop"></i><span>VNC</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+  <!-- Sidebar -->

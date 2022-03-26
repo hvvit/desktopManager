@@ -16,6 +16,8 @@ sys.path.append(parent)
   
 # now we can import the module in the parent
 # directory.
+
+vncs_directory = '/home/harshv/python/desktopManager/bin/vncs_directory/'
 import subprocess
 def run_command(command_string):
   try:
@@ -28,7 +30,7 @@ def run_command(command_string):
   return process.communicate()[0]
 
 def check_if_vncs_exist(name):
-  return os.path.isfile('vncs_directory/' + name + ".vncs")
+  return os.path.isfile(vncs_directory + name + ".vncs")
 
 def run_vnc_server(geometry):
   output = run_command("vncserver -geometry " + geometry + " > /tmp/vncoutput 2>&1 ")
@@ -48,7 +50,7 @@ def run_vnc_server(geometry):
     if "Listening for VNC connections on TCP port" in line:
       vnc_port = line.split(' ')[-1].strip()
   if vnc_port != "":
-    return {'status': 'ok', 'message': {'vnc_port': vnc_port, 'display': display_port, 'log_file': log_file, 'geometry': geometry, 'hostname': hostname}}
+    return {'status': 'ok', 'message': {'vnc_port': vnc_port, 'display': display_port, 'log_file': log_file.strip(), 'geometry': geometry, 'hostname': hostname}}
   else:
     return {'status': 'error' ,'message': {'vnc_port': '', 'display': '', 'log_file': '', 'geometry': '', 'hostname': hostname }}
   
@@ -56,7 +58,7 @@ def start_vnc_server(name, geometry):
   if not check_if_vncs_exist(name):
     vnc_info = run_vnc_server(geometry)
     if vnc_info['status'] == 'ok':
-      file_name = "vncs_directory/" + name + ".vncs"
+      file_name = vncs_directory + name + ".vncs"
       with open(file_name, 'w') as outfile:
         json.dump(vnc_info, outfile)
       return {'status': 'ok', 'message': { 'vnc_info': vnc_info }}
@@ -64,4 +66,37 @@ def start_vnc_server(name, geometry):
       return {'status': 'error', 'message': 'Not able to create VNCs'}
   else:
     return {'status': 'error', 'message': 'VNC already exists'}
-print(start_vnc_server("myvnc", "1920x1080"))
+
+def kill_vnc_server(name):
+  if check_if_vncs_exist(name):
+    file_name = vncs_directory + name + ".vncs"
+    with open(file_name, 'r') as outfile:
+      vnc_data = json.load(outfile)
+    display_id = vnc_data['message']['display']
+    output = run_command("vncserver -kill :" + display_id.strip() + " > /tmp/vncoutput 2>&1")
+    file = open('/tmp/vncoutput')
+    for line in file:
+      if line.startswith('Killing'):
+        output = run_command('rm -f ' + file_name)
+        return {'status': 'ok', 'message': name + " vnc server removed"}
+  else:
+    return {'status': 'error', 'message': name + " vnc server not found"}
+
+def list_all_vnc_server():
+  vnc_servers = []
+  for vncs in os.listdir(vncs_directory):
+    with open(vncs_directory + "/" + vncs, 'r') as vnc_file:
+      vnc_servers.append({ 'name': vncs.split('/')[-1],'data': json.load(vnc_file)})
+  if vnc_servers:
+    return {'status': 'ok', 'message': vnc_servers}
+  else:
+    return {'status': 'error', 'message': 'No VNC servers found'}
+
+def get_vnc_info(name):
+  if check_if_vncs_exist(name):
+    file_name = vncs_directory + name + ".vncs"
+    with open(file_name, 'r') as vncs:
+      data = json.load(vncs)
+    return {'status': 'ok', 'message': data}
+  else:
+    return {'status': 'error', 'message': name + ' VNC does not exist'}

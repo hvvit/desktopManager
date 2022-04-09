@@ -1,7 +1,75 @@
 {% extends "frame.html" %}
 {% block content %}
-<main style="margin-top: 58px;">  
-  <div class="container pt-4">Welcome to Dashboard</div>
+<main style="margin-top: 20px;">  
+  <div class="container-fluid">
+    <div class = "row">
+      <div class = "col">
+        <h2>DesktopManager</h2>
+      </div>
+    </div>
+    <div class = "row" style="margin-top: 10px;">
+      <div class="col-md-4">
+        <div class="card">
+          <h5 class="card-header">Create VNC server</h5>
+          <div class="card-body">
+            <form>
+              <div class="form-group">
+                <label for="vnc_name">Vnc Server name</label>
+                <input type="text" class="form-control" id="vnc_name" placeholder="Myvnc">
+              </div>
+              <div class="form-group">
+                <label for="exampleFormControlSelect1">Select VNC server Resolution</label>
+                <select class="form-control" id="resolution">
+                  <option id="current_resolution">Current Resolution</option>
+                  <option>1920x1080</option>
+                  <option>1280x720</option>
+                  <option>1080x720</option>
+                </select>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="card">
+          <h5 class="card-header">VNC servers</h5>
+          <div class="card-body">
+            <table class="table">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">Display</th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Connection</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">1</th>
+                  <td>Mark</td>
+                  <td>Otto</td>
+                  <td>@mdo</td>
+                </tr>
+                <tr>
+                  <th scope="row">2</th>
+                  <td>Jacob</td>
+                  <td>Thornton</td>
+                  <td>@fat</td>
+                </tr>
+                <tr>
+                  <th scope="row">3</th>
+                  <td>Larry</td>
+                  <td>the Bird</td>
+                  <td>@twitter</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 <script type="text/javascript" src="{{ url_for('static', filename='dist/js/pages/dashboard.js') }}"></script>
 {% endblock %}

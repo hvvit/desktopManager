@@ -1,3 +1,4 @@
+from email import message
 from ossaudiodev import OSSAudioError
 import sys
 import os
@@ -30,7 +31,7 @@ def run_command(command_string):
   return process.communicate()[0]
 
 def check_if_vncs_exist(name):
-  return os.path.isfile(vncs_directory + name + ".vncs")
+  return os.path.isfile(vncs_directory + name)
 
 def run_vnc_server(geometry):
   output = run_command("vncserver -geometry " + geometry + " > /tmp/vncoutput 2>&1 ")
@@ -55,12 +56,12 @@ def run_vnc_server(geometry):
     return {'status': 'error' ,'message': {'vnc_port': '', 'display': '', 'log_file': '', 'geometry': '', 'hostname': hostname }}
   
 def start_vnc_server(name, geometry):
-  if not check_if_vncs_exist(name):
+  if not check_if_vncs_exist(name + ".vncs"):
     vnc_info = run_vnc_server(geometry)
     if vnc_info['status'] == 'ok':
       file_name = vncs_directory + name + ".vncs"
       with open(file_name, 'w') as outfile:
-        json.dump(vnc_info, outfile)
+        json.dump(vnc_info['message'], outfile)
       return {'status': 'ok', 'message': { 'vnc_info': vnc_info }}
     else:
       return {'status': 'error', 'message': 'Not able to create VNCs'}
@@ -69,16 +70,17 @@ def start_vnc_server(name, geometry):
 
 def kill_vnc_server(name):
   if check_if_vncs_exist(name):
-    file_name = vncs_directory + name + ".vncs"
+    file_name = vncs_directory + name
     with open(file_name, 'r') as outfile:
       vnc_data = json.load(outfile)
-    display_id = vnc_data['message']['display']
+    display_id = vnc_data['display']
     output = run_command("vncserver -kill :" + display_id.strip() + " > /tmp/vncoutput 2>&1")
     file = open('/tmp/vncoutput')
+    output = run_command('rm -f ' + file_name)
     for line in file:
       if line.startswith('Killing'):
-        output = run_command('rm -f ' + file_name)
         return {'status': 'ok', 'message': name + " vnc server removed"}
+    return {'status': 'ok', 'message': name + " vnc server config file removed"}
   else:
     return {'status': 'error', 'message': name + " vnc server not found"}
 
@@ -94,9 +96,40 @@ def list_all_vnc_server():
 
 def get_vnc_info(name):
   if check_if_vncs_exist(name):
-    file_name = vncs_directory + name + ".vncs"
+    file_name = vncs_directory + name
     with open(file_name, 'r') as vncs:
       data = json.load(vncs)
     return {'status': 'ok', 'message': data}
   else:
     return {'status': 'error', 'message': name + ' VNC does not exist'}
+
+def kill_all_vnc():
+  list_of_files = os.listdir(vncs_directory)
+  messages = []
+  for file in list_of_files:
+    if file.endswith('.vncs'):
+      vnc_status = kill_vnc_server(file)
+      if vnc_status['status'] == 'ok':
+        messages.append({'status': 'ok', 'message': vnc_status['message']})
+      else:
+        messages.append({'status': 'error', 'message': vnc_status['message']})
+  if list_of_files:
+    return {'status': 'ok', 'message': messages}
+  else:
+    return {'status': 'error', 'message': 'No VNCs found'}
+
+def kill_multiple_vncs(list_of_vnc):
+  if list_of_vnc:
+    messages = []
+    for vnc in list_of_vnc:
+      if vnc.endswith('.vncs'):
+        vnc_status = kill_vnc_server(vnc)
+        if vnc_status['status'] == 'ok':
+          messages.append({'status': 'ok', 'message': vnc_status['message']})
+        else:
+          messages.append({'status': 'error', 'message': vnc_status['message']})
+      else:
+        messages.append({'status': 'error', 'message': 'wrong vnc name given: '+vnc})
+    return {'status': 'ok', 'message': messages}
+  else:
+    return {'status': 'error', 'message': 'No VNCs found'}
